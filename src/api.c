@@ -297,31 +297,9 @@ mtcp_setsockopt(mctx_t mctx, int sockid, int level,
 
 	if (level == IPPROTO_TCP) {
 		if (optname == TCP_SETUP_OFFLOAD) {
-#ifdef USE_NFP_NIC
-			struct tcp_listener *listener;
-			if (!(listener = socket->listener)) {
-				TRACE_API("TCP_SETUP_OFFLOAD should be used for listening sockets\n");
-				errno = ENOTSOCK;
-				return -1;
-			}
-			if ((*(int *)optval) > 0) {
-				/* enable setup offload */
-				if (!AddListenNICPort(mtcp,
-									  (listener->socket->saddr.sin_addr.s_addr)?
-									  listener->socket->saddr.sin_addr.s_addr : CONFIG.eths[0].ip_addr,
-									  listener->socket->saddr.sin_port))
-					TRACE_ERROR("failed to send control packet to NIC\n");
-			}
-			else {
-				/* disable setup offload */				
-				if (!DelListenNICPort(mtcp))
-					TRACE_ERROR("failed to send control packet to NIC\n");
-			}
-#else
 			TRACE_API("Setup offload is supported only for NFP NICs\n");
 			errno = EOPNOTSUPP;
 			return -1;	
-#endif
 		}
 		else if (optname == TCP_TEARDOWN_OFFLOAD) {
 			if (!socket->stream) {

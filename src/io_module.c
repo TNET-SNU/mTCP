@@ -145,12 +145,6 @@ SetInterfaceInfo(char* dev_name_list)
 
 				/* Setting informations */
 				eidx = CONFIG.eths_num++;
-#ifdef USE_NFP_NIC
-				if (CONFIG.eths_num > 2) {
-					TRACE_ERROR("For now, we allow at most two dpdk interfaces in NFP device!\n");
-					exit(EXIT_FAILURE);
-				}
-#endif				
 				strcpy(CONFIG.eths[eidx].dev_name, iter_if->ifa_name);
 				strcpy(ifr.ifr_name, iter_if->ifa_name);
 
@@ -206,20 +200,6 @@ SetInterfaceInfo(char* dev_name_list)
 			iter_if = iter_if->ifa_next;
 		} while (iter_if != NULL);
 
-
-#ifdef USE_NFP_NIC
-		printf("NFP: Current NFP hardware only supports single-queue VFs.\n"
-			   "NFP: VF should be mapped to each core (per-core VF mode).\n"
-			   "NFP: The number of VFs = %d\n"
-			   "NFP: The number of cores = %d\n"
-			   "NFP: The number of dpdk interfaces = %d\n", num_devices, cpu, CONFIG.eths_num);
-		if (num_devices < cpu * CONFIG.eths_num) {
-			TRACE_ERROR("NFP: (# VFs) is smaller than {(# cores) * (# dpdk interfaces)}!\n");
-			exit(EXIT_FAILURE);
-		}
-		num_devices = cpu * CONFIG.eths_num;
-#endif
-		
 		freeifaddrs(ifap);
 
 		/* check if process is primary or secondary */

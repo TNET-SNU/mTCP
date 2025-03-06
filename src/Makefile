@@ -10,7 +10,6 @@ HWCSUM=1
 UCTX=0
 VFIO=0
 LOGGER=0
-USE_NFP_NIC=0
 APP_INTERRUPT=0
 MTCP_LIB_DIR=../lib
 MTCP_LIB=libmtcp.a
@@ -83,10 +82,6 @@ INC  += -I./intel_lthread/ -I./intel_lthread/arch/x86/
 endif
 ifeq ($(VFIO), 1)
 GCC_OPT += -DENABLE_VFIO
-endif
-
-ifeq ($(USE_NFP_NIC), 1)
-GCC_OPT += -DUSE_NFP_NIC
 endif
 
 PKGCONF = pkg-config

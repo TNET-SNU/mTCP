@@ -25,13 +25,4 @@ EthernetOutput(struct mtcp_manager *mtcp, uint16_t h_proto,
 			   int nif, unsigned char* dst_haddr, uint16_t iplen,
 			   struct mtcp_offload_meta* offload_meta);
 
-#ifdef USE_NFP_NIC
-uint8_t *
-EthernetControlOutput(struct mtcp_manager *mtcp);
-uint8_t *
-AddListenNICPort(struct mtcp_manager *mtcp, uint32_t ip, uint16_t port);
-uint8_t *
-DelListenNICPort(struct mtcp_manager *mtcp);
-#endif
-
 #endif /* __ETH_OUT_H_ */

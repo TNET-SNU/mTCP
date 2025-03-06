@@ -325,14 +325,7 @@ dpdk_send_pkts(struct mtcp_thread_context *ctxt, int ifidx)
 #endif
 		do {
 			/* tx cnt # of packets */
-#ifdef USE_NFP_NIC
-			/* NFP devices only support single-queue VFs for now */
-			ret = rte_eth_tx_burst((ifidx * CONFIG.num_cores + ctxt->cpu), 0,
-								   pkts, cnt);
-#else
-			ret = rte_eth_tx_burst(portid, ctxt->cpu,
-								   pkts, cnt);
-#endif
+			ret = rte_eth_tx_burst(portid, ctxt->cpu, pkts, cnt);
 			/* if not all pkts were sent... then repeat the cycle */
 			if (ret != cnt)
 				printf("not fully TXed, ret: %d, cnt: %d\n", ret, cnt);
@@ -421,15 +414,9 @@ dpdk_recv_pkts(struct mtcp_thread_context *ctxt, int ifidx)
 		dpc->rmbufs[ifidx].len = 0;
 	}
 
-#ifdef USE_NFP_NIC
-	/* NFP devices only support single-queue VFs for now */
-	ret = rte_eth_rx_burst((uint8_t)(ifidx * CONFIG.num_cores + ctxt->cpu), 0,
-			       dpc->pkts_burst, MAX_PKT_BURST);
-#else
 	int portid = CONFIG.eths[ifidx].ifindex;	
 	ret = rte_eth_rx_burst((uint8_t)portid, ctxt->cpu,
 			       dpc->pkts_burst, MAX_PKT_BURST);
-#endif
 	
 #ifdef RX_IDLE_ENABLE
 	dpc->rx_idle = (likely(ret != 0)) ? 0 : dpc->rx_idle + 1;
@@ -666,7 +653,6 @@ dpdk_load_module(void)
 
 		/* Initialise each port */
 		int i;
-#ifndef USE_NFP_NIC
 		for (i = 0; i < num_devices_attached; ++i) {
 			/* get portid form the index of attached devices */
 			portid = devices_attached[i];
@@ -748,58 +734,6 @@ dpdk_load_module(void)
 			       ports_eth_addr[portid].addr_bytes[5]);
 #endif
 		}
-#else /* if USE_NFP_NIC is defined (mapping VF per core in NFP devices) */
-
-		for (i = 0; i < CONFIG.eths_num; i++) {
-			for (rxlcore_id = 0; rxlcore_id < CONFIG.num_cores; rxlcore_id++) {
-			
-				/* get portid form the index of attached devices */
-				portid = i * CONFIG.num_cores + rxlcore_id;
-
-				/* init port */
-				printf("Initializing VF %u... (rxlcore_id : %u)", (unsigned) portid, rxlcore_id);
-				fflush(stdout);
-				/* NFP devices only support single-queue VFs for now */
-				ret = rte_eth_dev_configure(portid, 1, 1, &port_conf);
-				if (ret < 0)
-					rte_exit(EXIT_FAILURE, "Cannot configure device: err=%d, port=%u\n",
-							 ret, (unsigned) portid);
-
-				/* init one RX queue per CPU */
-				fflush(stdout);
-
-				/* check port capabilities */
-				rte_eth_dev_info_get(portid, &dev_info[portid]);
-
-				ret = rte_eth_rx_queue_setup(portid, 0, nb_rxd,
-											 rte_eth_dev_socket_id(portid), &rx_conf,
-											 pktmbuf_pool[rxlcore_id]);
-				if (ret < 0)
-					rte_exit(EXIT_FAILURE,
-							 "rte_eth_rx_queue_setup:err=%d, port=%u, queueid: %d\n",
-							 ret, (unsigned) portid, 0);
-
-
-				/* init one TX queue on each port per CPU (this is redundant for this app) */
-				fflush(stdout);
-				ret = rte_eth_tx_queue_setup(portid, 0, nb_txd,
-											 rte_eth_dev_socket_id(portid), &tx_conf);
-				if (ret < 0)
-					rte_exit(EXIT_FAILURE,
-							 "rte_eth_tx_queue_setup:err=%d, port=%u, queueid: %d\n",
-							 ret, (unsigned) portid, 0);
-
-				/* Start device */
-				ret = rte_eth_dev_start(portid);
-				if (ret < 0)
-					rte_exit(EXIT_FAILURE, "rte_eth_dev_start:err=%d, port=%u\n",
-							 ret, (unsigned) portid);
-
-				printf("done: \n");
-				rte_eth_promiscuous_enable(portid);
-			}
-		}
-#endif
 		
 		/* only check for link status if the thread is master */
 		check_all_ports_link_status(num_devices_attached, 0xFFFFFFFF);

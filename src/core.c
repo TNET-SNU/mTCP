@@ -882,13 +882,6 @@ RunMainLoop(struct mtcp_thread_context *ctx)
 	clock_gettime(CLOCK_MONOTONIC_COARSE, &cur_ts);
 	ts = ts_prev = 0;
 
-#ifdef USE_NFP_NIC
-	if (ctx->cpu == mtcp_master) {
-		if (!EthernetControlOutput(mtcp))
-			TRACE_ERROR("failed to send control packet to NIC\n");
-	}
-#endif
-	
 	while ((!ctx->done || mtcp->flow_cnt) && !ctx->exit) {
 		STAT_COUNT(mtcp->runstat.rounds);
 		// gettimeofday(&cur_ts, NULL);

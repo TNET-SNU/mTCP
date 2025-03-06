@@ -48,12 +48,7 @@
 /* TCP segmentation offload */
 #define ENABLE_TSO                  TRUE
 #if ENABLE_TSO
-#ifdef USE_NFP_NIC
-/* maximum segment size for TSO is limited to 8K in Agilio NICs */
-#define MAX_TSO_BUFSIZE (8 * 1024)
-#else
 #define MAX_TSO_BUFSIZE (16 * 1024)
-#endif
 #endif
 /*------------------------------------------------------------------------------------------*/
 #define ETHERNET_HEADER_LEN		14	// sizeof(struct ethhdr)
